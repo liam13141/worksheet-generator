@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a School Worksheet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .input-section, .worksheet-section {
+            margin: 20px 0;
+        }
+
+        .input-section label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        .input-section textarea, .input-section input, .input-section select {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .input-section select {
+            width: 50%;
+        }
+
+        .worksheet {
+            border: 1px solid #000;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .worksheet h2 {
+            font-size: 18px;
+        }
+
+        .worksheet p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .worksheet .answers {
+            margin-left: 20px;
+        }
+
+        .worksheet .answers p {
+            font-size: 16px;
+        }
+
+        /* Spacing between questions */
+        .worksheet .question {
+            margin-bottom: 20px; /* Adds spacing between questions */
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            h1 {
+                display: none;
+            }
+        }
+
+        .message {
+            background-color: #ffcc00;
+            color: black;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+            border: 1px solid #cc9900;
+            border-radius: 5px;
+        }
+
+        .dismiss-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Create Your School Worksheet</h1>
+
+    <!-- Message to Display -->
+    <div class="message">
+        <p><strong>WARNING: Unauthorized reproduction or distribution of this website's code is prohibited. Legal action may be taken if copied.</strong></p>
+        <button class="dismiss-button" onclick="dismissMessage()">Dismiss</button>
+    </div>
+
+    <!-- Input Section for Adding Questions -->
+    <div class="input-section no-print">
+        <label for="questionText">Enter a question:</label>
+        <textarea id="questionText" rows="2"></textarea>
+
+        <label for="questionType">Select Question Type:</label>
+        <select id="questionType" onchange="toggleAnswerFields()">
+            <option value="multipleChoice">Multiple Choice</option>
+            <option value="shortAnswer">Short Answer</option>
+            <option value="fillInBlank">Fill in the Blank</option>
+            <option value="trueFalse">True/False</option>
+        </select>
+
+        <!-- Multiple Choice Answers -->
+        <div id="multipleChoiceFields">
+            <label for="answerA">Enter answer A:</label>
+            <input id="answerA" type="text">
+
+            <label for="answerB">Enter answer B:</label>
+            <input id="answerB" type="text">
+
+            <label for="answerC">Enter answer C:</label>
+            <input id="answerC" type="text">
+
+            <label for="answerD">Enter answer D:</label>
+            <input id="answerD" type="text">
+        </div>
+
+        <!-- Short Answer Field (hidden initially) -->
+        <div id="shortAnswerField" style="display: none;">
+            <p>The answer will be written by the student. No additional inputs needed.</p>
+        </div>
+
+        <!-- Fill in the Blank Field (hidden initially) -->
+        <div id="fillInBlankField" style="display: none;">
+            <p>Indicate where the blank should go by using underscores (_) in the question.</p>
+        </div>
+
+        <!-- True/False Field (hidden initially) -->
+        <div id="trueFalseField" style="display: none;">
+            <p>The answer options will be:</p>
+            <p>a. true</p>
+            <p>b. false</p>
+        </div>
+
+        <button onclick="addQuestion()">Add Question</button>
+        <button onclick="window.print()">Print Worksheet</button>
+
+        <label for="deleteQuestionNumber">Enter Question Number to Delete:</label>
+        <input id="deleteQuestionNumber" type="number" min="1" />
+
+        <button onclick="deleteQuestion()">Delete Question</button>
+    </div>
+
+    <!-- Worksheet Section -->
+    <div class="worksheet-section">
+        <div class="worksheet" id="worksheet">
+            <h2>Worksheet</h2>
+            <p><strong>Name:</strong> ____________________</p>
+            <p><strong>Date:</strong> ____________________</p>
+            <div id="questions"></div>
+        </div>
+    </div>
+
+    <script>
+        let questionNumber = 1; // Initialize question numbering
+        let questionElements = []; // Array to store the added question elements
+
+        // Function to toggle answer fields based on selected question type
+        function toggleAnswerFields() {
+            const questionType = document.getElementById('questionType').value;
+
+            document.getElementById('multipleChoiceFields').style.display = (questionType === 'multipleChoice') ? 'block' : 'none';
+            document.getElementById('shortAnswerField').style.display = (questionType === 'shortAnswer') ? 'block' : 'none';
+            document.getElementById('fillInBlankField').style.display = (questionType === 'fillInBlank') ? 'block' : 'none';
+            document.getElementById('trueFalseField').style.display = (questionType === 'trueFalse') ? 'block' : 'none';
+        }
+
+        // Function to add the question to the worksheet
+        function addQuestion() {
+            const questionText = document.getElementById('questionText').value;
+            const questionType = document.getElementById('questionType').value;
+
+            if (questionText.trim() === '') {
+                alert('Please enter a question');
+                return;
+            }
+
+            // Create a new question element
+            const questionElement = document.createElement('div');
+            questionElement.classList.add('question');
+
+            // Add the question number and text
+            const questionLabel = document.createElement('p');
+            questionLabel.textContent = `${questionNumber}. ${questionText}`; // Adding the question number
+            questionElement.appendChild(questionLabel);
+
+            // Add answer options based on the question type
+            if (questionType === 'multipleChoice') {
+                const answersDiv = document.createElement('div');
+                answersDiv.classList.add('answers');
+
+                const answerAElement = document.createElement('p');
+                answerAElement.textContent = "a. " + document.getElementById('answerA').value;
+                answersDiv.appendChild(answerAElement);
+
+                const answerBElement = document.createElement('p');
+                answerBElement.textContent = "b. " + document.getElementById('answerB').value;
+                answersDiv.appendChild(answerBElement);
+
+                const answerCElement = document.createElement('p');
+                answerCElement.textContent = "c. " + document.getElementById('answerC').value;
+                answersDiv.appendChild(answerCElement);
+
+                const answerDElement = document.createElement('p');
+                answerDElement.textContent = "d. " + document.getElementById('answerD').value;
+                answersDiv.appendChild(answerDElement);
+
+                questionElement.appendChild(answersDiv);
+
+            } else if (questionType === 'shortAnswer') {
+                const shortAnswerElement = document.createElement('p');
+                shortAnswerElement.textContent = "Answer: ___________________________";
+                questionElement.appendChild(shortAnswerElement);
+
+            } else if (questionType === 'fillInBlank') {
+                const fillInBlankElement = document.createElement('p');
+                fillInBlankElement.textContent = questionText;
+                questionElement.appendChild(fillInBlankElement);
+
+            } else if (questionType === 'trueFalse') {
+                const trueFalseElement = document.createElement('p');
+                trueFalseElement.textContent = "a. true";
+                questionElement.appendChild(trueFalseElement);
+
+                const falseElement = document.createElement('p');
+                falseElement.textContent = "b. false";
+                questionElement.appendChild(falseElement);
+            }
+
+            // Add the new question to the worksheet
+            document.getElementById('questions').appendChild(questionElement);
+
+            // Store the question element in the array
+            questionElements.push(questionElement);
+
+            // Clear the input fields for the next question
+            document.getElementById('questionText').value = '';
+            document.getElementById('answerA').value = '';
+            document.getElementById('answerB').value = '';
+            document.getElementById('answerC').value = '';
+            document.getElementById('answerD').value = '';
+
+            questionNumber++; // Increment the question number
+        }
+
+        // Function to delete a question based on the input number
+        function deleteQuestion() {
+            const deleteNumber = parseInt(document.getElementById('deleteQuestionNumber').value);
+            
+            if (isNaN(deleteNumber) || deleteNumber < 1 || deleteNumber > questionElements.length) {
+                alert('Invalid question number');
+                return;
+            }
+
+            // Remove the question from the DOM and from the array
+            const questionToDelete = questionElements[deleteNumber - 1];
+            questionToDelete.remove();
+            questionElements.splice(deleteNumber - 1, 1); // Remove from array
+
+            // Adjust the question numbers
+            updateQuestionNumbers();
+        }
+
+        // Function to update the question numbers
+        function updateQuestionNumbers() {
+            questionElements.forEach((question, index) => {
+                const questionLabel = question.querySelector('p');
+                questionLabel.textContent = `${index + 1}. ${questionLabel.textContent.split('. ')[1]}`;
+            });
+
+            questionNumber = questionElements.length + 1; // Update the next question number
+        }
+
+        // Function to dismiss the warning message
+        function dismissMessage() {
+            document.querySelector('.message').style.display = 'none';
+        }
+    </script>
+
+    <footer style="text-align: center; padding: 20px; background-color: #f1f1f1;">
+        <p>&copy; 2024-2025 Moon Lit Websites™. All rights reserved.</p>
+        <p><strong>WARNING: Unauthorized reproduction or distribution of this website's code is prohibited. Legal action may be taken if copied.</strong></p>
+    </footer>
+
+</body>
+</html>
